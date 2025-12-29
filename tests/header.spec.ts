@@ -87,6 +87,18 @@ const industrialSaltSubmenuItems: MenuItem[] = [
   { class: "menu-item-6096", label: "Ice Salt" },
 ];
 
+const aboutUsSubmenuItems: MenuItem[] = [
+  { class: "menu-item-7459", label: "Our Team" },
+  { class: "menu-item-8125", label: "Careers" },
+];
+
+const resourcesSubmenuItems: MenuItem[] = [
+  { class: "menu-item-6132", label: "Company Profile" },
+  { class: "menu-item-6131", label: "Certificates" },
+  { class: "menu-item-6129", label: "Blogs" },
+  { class: "menu-item-10676", label: "Private Labeling" },
+];
+
 const nestedSubmenus: SubmenuGroup[] = [
   {
     parentClass: "menu-item-6089",
@@ -172,6 +184,42 @@ test.describe("Navigation Menu Tests", () => {
     await verifyMenuItems(
       page,
       industrialSaltSubmenuItems,
+      NavSelectors.subMenuItem
+    );
+  });
+
+  test("Check About Us dropdown opens", async ({ page }) => {
+    await openDropdown(page, "About Us");
+
+    const ourTeamItem = page.locator(
+      NavSelectors.subMenuItem("menu-item-7459"),
+      { hasText: "Our Team" }
+    );
+    await expect(ourTeamItem).toBeVisible();
+  });
+
+  test("Check all About Us submenu items", async ({ page }) => {
+    await openDropdown(page, "About Us");
+
+    await verifyMenuItems(page, aboutUsSubmenuItems, NavSelectors.subMenuItem);
+  });
+
+  test("Check Resources dropdown opens", async ({ page }) => {
+    await openDropdown(page, "Resources");
+
+    const companyProfileItem = page.locator(
+      NavSelectors.subMenuItem("menu-item-6132"),
+      { hasText: "Company Profile" }
+    );
+    await expect(companyProfileItem).toBeVisible();
+  });
+
+  test("Check all Resources submenu items", async ({ page }) => {
+    await openDropdown(page, "Resources");
+
+    await verifyMenuItems(
+      page,
+      resourcesSubmenuItems,
       NavSelectors.subMenuItem
     );
   });
