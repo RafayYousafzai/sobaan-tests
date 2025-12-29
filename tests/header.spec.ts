@@ -83,4 +83,50 @@ test("Check all Products submenu items", async ({ page }) => {
       await page.waitForTimeout(300);
     }
   }
+
+  // Check Salt Lamp and Candle Holders submenus
+  // Expand Salt Lamp submenu
+  const saltLampMenu = page.locator(
+    "nav.elementor-nav-menu--main ul.sub-menu > li.menu-item-6089 > a.elementor-sub-item"
+  );
+  await saltLampMenu.click();
+  await page.waitForTimeout(300);
+
+  // Salt Lamp sub-items
+  const saltLampSubItems = [
+    { class: "menu-item-6099", label: "USB Salt Lamp" },
+    { class: "menu-item-6100", label: "3D Salt Lamp" },
+    { class: "menu-item-6101", label: "Night Salt Lamp" },
+    { class: "menu-item-6102", label: "Animal Shape Lamp" },
+    { class: "menu-item-6103", label: "Natural Salt Lamp" },
+    { class: "menu-item-6104", label: "Geometrical Shape Lamp" },
+    { class: "menu-item-6105", label: "Aroma Therapy Salt Lamp" },
+  ];
+  for (const item of saltLampSubItems) {
+    const subItem = page.locator(
+      `nav.elementor-nav-menu--main ul.sub-menu > li.menu-item-6089 ul.sub-menu > li.${item.class} > a.elementor-sub-item`
+    );
+    await expect(subItem).toBeVisible();
+  }
+
+  // Expand Candle Holders submenu
+  const candleMenu = page.locator(
+    "nav.elementor-nav-menu--main ul.sub-menu > li.menu-item-6206 > a.elementor-sub-item"
+  );
+  await candleMenu.click();
+  await page.waitForTimeout(300);
+
+  // Candle Holders sub-items
+  const candleSubItems = [
+    { class: "menu-item-6207", label: "White Candle Holder" },
+    { class: "menu-item-6208", label: "Grey Candle Holder" },
+    { class: "menu-item-6209", label: "Pink Candle Holder" },
+    { class: "menu-item-6210", label: "Geometric Candle Holder" },
+  ];
+  for (const item of candleSubItems) {
+    const subItem = page.locator(
+      `nav.elementor-nav-menu--main ul.sub-menu > li.menu-item-6206 ul.sub-menu > li.${item.class} > a.elementor-sub-item`
+    );
+    await expect(subItem).toBeVisible();
+  }
 });
