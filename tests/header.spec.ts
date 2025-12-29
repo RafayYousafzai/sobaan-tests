@@ -1,132 +1,152 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, Page, Locator } from "@playwright/test";
 
-// test("Check Home Menu Link", async ({ page }) => {
-//   await page.goto("https://sobaansalts.com/");
+// Constants
+const BASE_URL = "https://sobaansalts.com/";
+const DROPDOWN_ANIMATION_DELAY = 300;
 
-//   // FIX: We added "nav.elementor-nav-menu--main" before the "a" tag.
-//   // This forces Playwright to only look inside the DESKTOP menu, ignoring the hidden mobile one.
-//   const homeLink = page.locator(
-//     "nav.elementor-nav-menu--main a.elementor-item",
-//     {
-//       hasText: "Home",
-//     }
-//   );
+// Helper class for navigation selectors
+class NavSelectors {
+  static readonly MAIN_NAV = "nav.elementor-nav-menu--main";
+  static readonly MENU_ITEM = "a.elementor-item";
+  static readonly SUB_ITEM = "a.elementor-sub-item";
+  static readonly SUB_MENU = "ul.sub-menu";
 
-//   // 2. VERIFY: Now this should pass because we are targeting the visible one.
-//   await expect(homeLink).toBeVisible();
+  static mainMenuItem(text: string): string {
+    return `${NavSelectors.MAIN_NAV} ${NavSelectors.MENU_ITEM}`;
+  }
 
-//   // 3. CHECK ATTRIBUTE
-//   await expect(homeLink).toHaveAttribute(
-//     "href",
-//     "https://sobaansalts.com/salt-manufacturers/"
-//   );
+  static subMenuItem(parentClass: string): string {
+    return `${NavSelectors.MAIN_NAV} ${NavSelectors.SUB_MENU} > li.${parentClass} > ${NavSelectors.SUB_ITEM}`;
+  }
 
-//   // 4. CLICK IT
-//   await homeLink.click();
-// });
+  static nestedSubMenuItem(parentClass: string, itemClass: string): string {
+    return `${NavSelectors.MAIN_NAV} ${NavSelectors.SUB_MENU} > li.${parentClass} ${NavSelectors.SUB_MENU} > li.${itemClass} > ${NavSelectors.SUB_ITEM}`;
+  }
+}
 
-test("Check Products Dropdown", async ({ page }) => {
-  await page.goto("https://sobaansalts.com/");
+// Helper functions
+async function openDropdown(page: Page, menuText: string): Promise<void> {
+  const menu = page.locator(NavSelectors.mainMenuItem(menuText), {
+    hasText: menuText,
+  });
+  await menu.click();
+  await page.waitForTimeout(DROPDOWN_ANIMATION_DELAY);
+}
 
-  // FIX: Added dots (.) for classes and the parent container
-  // We strictly look inside the Main Desktop Menu for a link with text "Products"
-  const productsMenu = page.locator(
-    "nav.elementor-nav-menu--main a.elementor-item",
-    { hasText: "Products" }
-  );
+async function verifyMenuItem(
+  page: Page,
+  selector: string,
+  label: string
+): Promise<Locator> {
+  const item = page.locator(selector, { hasText: label });
+  await expect(item).toBeVisible();
+  return item;
+}
 
-  // Click instead of hover
-  await productsMenu.click();
-  // Wait for dropdown animation (optional, adjust as needed)
-  await page.waitForTimeout(300);
+async function verifyMenuItems(
+  page: Page,
+  items: MenuItem[],
+  selectorFn: (itemClass: string) => string
+): Promise<void> {
+  for (const item of items) {
+    await verifyMenuItem(page, selectorFn(item.class), item.label);
+  }
+}
 
-  const subItem = page.locator(
-    "nav.elementor-nav-menu--main a.elementor-sub-item",
-    { hasText: "Edible Salt" }
-  );
-  await expect(subItem).toBeVisible();
-});
+// Type definitions
+interface MenuItem {
+  class: string;
+  label: string;
+  hasSubmenu?: boolean;
+}
 
-test("Check all Products submenu items", async ({ page }) => {
-  await page.goto("https://sobaansalts.com/");
+interface SubmenuGroup {
+  parentClass: string;
+  parentLabel: string;
+  items: MenuItem[];
+}
 
-  // Open the Products dropdown
-  const productsMenu = page.locator(
-    "nav.elementor-nav-menu--main a.elementor-item",
-    { hasText: "Products" }
-  );
-  await productsMenu.click();
-  await page.waitForTimeout(300);
+// Test data
+const productsSubmenuItems: MenuItem[] = [
+  { class: "menu-item-6088", label: "Edible Salt" },
+  { class: "menu-item-6089", label: "Salt Lamp", hasSubmenu: true },
+  { class: "menu-item-6206", label: "Candle Holders", hasSubmenu: true },
+  { class: "menu-item-7327", label: "Bath Salt" },
+  { class: "menu-item-9808", label: "Salt Tiles" },
+  { class: "menu-item-6098", label: "Salt Licks" },
+  { class: "menu-item-6091", label: "Iodized Salt" },
+  { class: "menu-item-6092", label: "Epsom Salt" },
+  { class: "menu-item-6093", label: "Black Salt" },
+  { class: "menu-item-6135", label: "Table Salt" },
+  { class: "menu-item-6097", label: "Water Softner Salt" },
+];
 
-  // Map of menu-item-* classes to expected labels
-  const submenuItems = [
-    { class: "menu-item-6088", label: "Edible Salt" },
-    { class: "menu-item-6089", label: "Salt Lamp", hasSubmenu: true },
-    { class: "menu-item-6206", label: "Candle Holders", hasSubmenu: true },
-    { class: "menu-item-7327", label: "Bath Salt" },
-    { class: "menu-item-9808", label: "Salt Tiles" },
-    { class: "menu-item-6098", label: "Salt Licks" },
-    { class: "menu-item-6091", label: "Iodized Salt" },
-    { class: "menu-item-6092", label: "Epsom Salt" },
-    { class: "menu-item-6093", label: "Black Salt" },
-    { class: "menu-item-6135", label: "Table Salt" },
-    { class: "menu-item-6097", label: "Water Softner Salt" },
-  ];
+const nestedSubmenus: SubmenuGroup[] = [
+  {
+    parentClass: "menu-item-6089",
+    parentLabel: "Salt Lamp",
+    items: [
+      { class: "menu-item-6099", label: "USB Salt Lamp" },
+      { class: "menu-item-6100", label: "3D Salt Lamp" },
+      { class: "menu-item-6101", label: "Night Salt Lamp" },
+      { class: "menu-item-6102", label: "Animal Shape Lamp" },
+      { class: "menu-item-6103", label: "Natural Salt Lamp" },
+      { class: "menu-item-6104", label: "Geometrical Shape Lamp" },
+      { class: "menu-item-6105", label: "Aroma Therapy Salt Lamp" },
+    ],
+  },
+  {
+    parentClass: "menu-item-6206",
+    parentLabel: "Candle Holders",
+    items: [
+      { class: "menu-item-6207", label: "White Candle Holder" },
+      { class: "menu-item-6208", label: "Grey Candle Holder" },
+      { class: "menu-item-6209", label: "Pink Candle Holder" },
+      { class: "menu-item-6210", label: "Geometric Candle Holder" },
+    ],
+  },
+];
 
-  for (const item of submenuItems) {
-    const subItem = page.locator(
-      `nav.elementor-nav-menu--main ul.sub-menu > li.${item.class} > a.elementor-sub-item`
+// Tests
+test.describe("Navigation Menu Tests", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(BASE_URL);
+  });
+
+  test("Check Products Dropdown opens", async ({ page }) => {
+    await openDropdown(page, "Products");
+
+    const edibleSaltItem = page.locator(
+      NavSelectors.subMenuItem("menu-item-6088"),
+      { hasText: "Edible Salt" }
     );
-    await expect(subItem).toBeVisible();
-    if (item.hasSubmenu) {
-      await subItem.click();
-      await page.waitForTimeout(300);
+    await expect(edibleSaltItem).toBeVisible();
+  });
+
+  test("Check all Products submenu items", async ({ page }) => {
+    await openDropdown(page, "Products");
+
+    await verifyMenuItems(page, productsSubmenuItems, NavSelectors.subMenuItem);
+  });
+
+  test("Check nested submenus (Salt Lamp & Candle Holders)", async ({
+    page,
+  }) => {
+    await openDropdown(page, "Products");
+
+    for (const submenu of nestedSubmenus) {
+      const parentItem = await verifyMenuItem(
+        page,
+        NavSelectors.subMenuItem(submenu.parentClass),
+        submenu.parentLabel
+      );
+
+      await parentItem.click();
+      await page.waitForTimeout(DROPDOWN_ANIMATION_DELAY);
+
+      await verifyMenuItems(page, submenu.items, (itemClass) =>
+        NavSelectors.nestedSubMenuItem(submenu.parentClass, itemClass)
+      );
     }
-  }
-
-  // Check Salt Lamp and Candle Holders submenus
-  // Expand Salt Lamp submenu
-  const saltLampMenu = page.locator(
-    "nav.elementor-nav-menu--main ul.sub-menu > li.menu-item-6089 > a.elementor-sub-item"
-  );
-  await saltLampMenu.click();
-  await page.waitForTimeout(300);
-
-  // Salt Lamp sub-items
-  const saltLampSubItems = [
-    { class: "menu-item-6099", label: "USB Salt Lamp" },
-    { class: "menu-item-6100", label: "3D Salt Lamp" },
-    { class: "menu-item-6101", label: "Night Salt Lamp" },
-    { class: "menu-item-6102", label: "Animal Shape Lamp" },
-    { class: "menu-item-6103", label: "Natural Salt Lamp" },
-    { class: "menu-item-6104", label: "Geometrical Shape Lamp" },
-    { class: "menu-item-6105", label: "Aroma Therapy Salt Lamp" },
-  ];
-  for (const item of saltLampSubItems) {
-    const subItem = page.locator(
-      `nav.elementor-nav-menu--main ul.sub-menu > li.menu-item-6089 ul.sub-menu > li.${item.class} > a.elementor-sub-item`
-    );
-    await expect(subItem).toBeVisible();
-  }
-
-  // Expand Candle Holders submenu
-  const candleMenu = page.locator(
-    "nav.elementor-nav-menu--main ul.sub-menu > li.menu-item-6206 > a.elementor-sub-item"
-  );
-  await candleMenu.click();
-  await page.waitForTimeout(300);
-
-  // Candle Holders sub-items
-  const candleSubItems = [
-    { class: "menu-item-6207", label: "White Candle Holder" },
-    { class: "menu-item-6208", label: "Grey Candle Holder" },
-    { class: "menu-item-6209", label: "Pink Candle Holder" },
-    { class: "menu-item-6210", label: "Geometric Candle Holder" },
-  ];
-  for (const item of candleSubItems) {
-    const subItem = page.locator(
-      `nav.elementor-nav-menu--main ul.sub-menu > li.menu-item-6206 ul.sub-menu > li.${item.class} > a.elementor-sub-item`
-    );
-    await expect(subItem).toBeVisible();
-  }
+  });
 });
