@@ -81,6 +81,12 @@ const productsSubmenuItems: MenuItem[] = [
   { class: "menu-item-6097", label: "Water Softner Salt" },
 ];
 
+const industrialSaltSubmenuItems: MenuItem[] = [
+  { class: "menu-item-6095", label: "Pool Salt" },
+  { class: "menu-item-6094", label: "Road Salt" },
+  { class: "menu-item-6096", label: "Ice Salt" },
+];
+
 const nestedSubmenus: SubmenuGroup[] = [
   {
     parentClass: "menu-item-6089",
@@ -148,5 +154,25 @@ test.describe("Navigation Menu Tests", () => {
         NavSelectors.nestedSubMenuItem(submenu.parentClass, itemClass)
       );
     }
+  });
+
+  test("Check Industrial Salts dropdown opens", async ({ page }) => {
+    await openDropdown(page, "Industrial Salts");
+
+    const poolSaltItem = page.locator(
+      NavSelectors.subMenuItem("menu-item-6095"),
+      { hasText: "Pool Salt" }
+    );
+    await expect(poolSaltItem).toBeVisible();
+  });
+
+  test("Check all Industrial Salts submenu items", async ({ page }) => {
+    await openDropdown(page, "Industrial Salts");
+
+    await verifyMenuItems(
+      page,
+      industrialSaltSubmenuItems,
+      NavSelectors.subMenuItem
+    );
   });
 });
