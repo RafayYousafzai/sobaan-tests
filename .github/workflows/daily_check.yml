@@ -41,7 +41,7 @@ jobs:
       if: always()
       run: |
         # Your n8n webhook URL
-        WEBHOOK_URL="https://n8n.coderesults.tech/webhook-test/14f64b3c-958d-4ff8-953a-05754c53ce28"
+        WEBHOOK_URL="https://n8n.coderesults.tech/webhook/14f64b3c-958d-4ff8-953a-05754c53ce28"
         
         # Determine test status
         if [ "${{ steps.playwright.outcome }}" == "failure" ]; then
