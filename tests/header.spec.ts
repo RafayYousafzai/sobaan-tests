@@ -76,7 +76,7 @@ async function verifyLinkNavigation(
   const item = page.locator(selector, { hasText: label });
 
   // 1. Click and wait for the network to be idle
-  await Promise.all([page.waitForLoadState("networkidle"), item.click()]);
+  await Promise.all([page.waitForLoadState("domcontentloaded"), item.click()]);
 
   // 2. Use a Regex to check the URL (ignores trailing slashes or minor query params)
   const urlPattern = new RegExp(expectedUrl.replace(/\/$/, "") + "/?$");
@@ -213,7 +213,7 @@ test.describe("Link Navigation Tests", () => {
     );
 
     for (const item of itemsToTest) {
-      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      await page.goto(BASE_URL, { waitUntil: "domcontentloaded" });
       await openDropdown(page, "Products");
       await verifyLinkNavigation(
         page,
