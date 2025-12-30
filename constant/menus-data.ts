@@ -40,11 +40,11 @@ export const productsSubmenuItems: MenuItem[] = [
     label: "Salt Tiles",
     url: "https://sobaansalts.com/salt-tiles/",
   },
-  // {
-  //   class: "menu-item-6098",
-  //   label: "Salt Licks",
-  //   url: "https://sobaansalts.com/himalayan-salt-lick-manufacturer/",
-  // },
+  {
+    class: "menu-item-6098",
+    label: "Salt Licks",
+    url: "https://sobaansalts.com/himalayan-salt-lick-manufacturer/",
+  },
   {
     class: "menu-item-6091",
     label: "Iodized Salt",
