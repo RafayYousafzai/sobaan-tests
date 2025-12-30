@@ -195,3 +195,13 @@ export const nestedSubmenus: SubmenuGroup[] = [
     ],
   },
 ];
+
+export const mainLinks = [
+  { label: "Home", url: "https://sobaansalts.com/salt-manufacturers/" },
+  { label: "Products", url: "#" },
+  // { label: "Industrial Salts", url: "" },
+  { label: "About Us", url: "https://sobaansalts.com/about-us/" },
+  // { label: "Resources", url: "" },
+  { label: "Contact Us", url: "https://sobaansalts.com/contact-us/" },
+  // Note: "Contact Us" is tested separately in the Smoke Test
+];

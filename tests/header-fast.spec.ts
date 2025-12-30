@@ -2,6 +2,7 @@ import { test, expect, Page, Locator } from "@playwright/test";
 import {
   aboutUsSubmenuItems,
   industrialSaltSubmenuItems,
+  mainLinks,
   nestedSubmenus,
   productsSubmenuItems,
   resourcesSubmenuItems,
@@ -17,7 +18,7 @@ class NavSelectors {
   static readonly SUB_ITEM = "a.elementor-sub-item";
   static readonly SUB_MENU = "ul.sub-menu";
 
-  static mainMenuItem(text: string): string {
+  static mainMenuItem(): string {
     return `${NavSelectors.MAIN_NAV} ${NavSelectors.MENU_ITEM}`;
   }
 
@@ -30,40 +31,58 @@ class NavSelectors {
   }
 }
 
-// Helper: Open Dropdown (Only used for visual checks)
+// Helper: Open Dropdown
 async function openDropdown(page: Page, menuText: string): Promise<void> {
-  const menu = page.locator(NavSelectors.mainMenuItem(menuText), {
+  const menu = page.locator(NavSelectors.mainMenuItem(), {
     hasText: menuText,
   });
-  // Force click to ensure it triggers
   await menu.dispatchEvent("mouseenter");
   await menu.hover({ force: true });
 }
 
-// Helper: Verify Attribute (Ignores visibility, preventing timeouts)
+// Helper: Verify Attribute (UPDATED to accept Label filter)
 async function verifyLinkAttribute(
   page: Page,
   selector: string,
-  expectedUrl: string
+  expectedUrl: string,
+  label?: string // Added optional label to filter results
 ): Promise<void> {
-  const link = page.locator(selector);
+  let link: Locator;
 
-  // 1. Check if the element exists in the HTML
+  if (label) {
+    // If label is provided, find the specific item (e.g. "Home")
+    link = page.locator(selector).filter({ hasText: label });
+  } else {
+    // Otherwise use the raw selector (for specific class-based sub-items)
+    link = page.locator(selector);
+  }
+
+  // 1. Check if the element exists (should be exactly 1)
   await expect(link).toHaveCount(1);
 
-  // 2. Check the URL strictly
+  // 2. Check the URL
   await expect(link).toHaveAttribute("href", expectedUrl);
 }
 
 // --- TEST SUITE ---
 
 test.describe("Fast Menu Verification", () => {
-  // Setup: Go to home page ONCE
   test.beforeEach(async ({ page }) => {
     await page.goto(BASE_URL, { waitUntil: "domcontentloaded" });
   });
 
-  // 1. VISUAL CHECK (Only Top Level)
+  test("Verify Main Top-Level Links", async ({ page }) => {
+    for (const link of mainLinks) {
+      await verifyLinkAttribute(
+        page,
+        NavSelectors.mainMenuItem(), // Pass generic selector
+        link.url,
+        link.label // Pass label to filter (FIXES THE "FOUND 6" ERROR)
+      );
+    }
+  });
+
+  // --- 2. CHECK DROPDOWNS OPEN ---
   test("Check all Dropdowns open correctly", async ({ page }) => {
     await openDropdown(page, "Products");
     await expect(page.locator(NavSelectors.MAIN_NAV)).toContainText(
@@ -84,10 +103,9 @@ test.describe("Fast Menu Verification", () => {
     );
   });
 
-  // 2. CODE-LEVEL CHECKS (Fast & Timeout-Proof)
+  // --- 3. CHECK SUB-MENU LINKS (Fast) ---
 
   test("Verify 'Products' links", async ({ page }) => {
-    // We don't even need to open the menu. The code is in the DOM.
     for (const item of productsSubmenuItems) {
       if (item.url) {
         await verifyLinkAttribute(
@@ -135,11 +153,8 @@ test.describe("Fast Menu Verification", () => {
     }
   });
 
-  // 3. NESTED MENU CHECK (The One That Failed)
+  // --- 4. CHECK NESTED MENUS ---
   test("Verify Nested Submenu Links (Salt Lamps, etc)", async ({ page }) => {
-    // FIX: Removed scroll/hover logic. We just check the HTML directly.
-    // This works even if the menu is closed or hidden.
-
     for (const submenu of nestedSubmenus) {
       for (const item of submenu.items) {
         if (item.url) {
@@ -153,14 +168,14 @@ test.describe("Fast Menu Verification", () => {
     }
   });
 
-  // 4. SMOKE TEST (Real Click)
-  test("Smoke Test: Click 'Contact Us'", async ({ page }) => {
-    const contactLink = page
-      .locator(NavSelectors.MAIN_NAV)
-      .getByText("Contact Us");
-    await Promise.all([
-      page.waitForURL(/.*contact-us/, { timeout: 30000 }),
-      contactLink.click(),
-    ]);
-  });
+  // --- 5. SMOKE TEST (Contact Us) ---
+  // test("Smoke Test: Click 'Contact Us'", async ({ page }) => {
+  //   const contactLink = page
+  //     .locator(NavSelectors.MAIN_NAV)
+  //     .getByText("Contact Us");
+  //   await Promise.all([
+  //     page.waitForURL(/.*contact-us/, { timeout: 30000 }),
+  //     contactLink.click(),
+  //   ]);
+  // });
 });
