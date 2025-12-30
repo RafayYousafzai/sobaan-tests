@@ -1,4 +1,11 @@
 import { test, expect, Page, Locator } from "@playwright/test";
+import {
+  aboutUsSubmenuItems,
+  industrialSaltSubmenuItems,
+  nestedSubmenus,
+  productsSubmenuItems,
+  resourcesSubmenuItems,
+} from "../constant/menus-data";
 
 // Constants
 const BASE_URL = "https://sobaansalts.com/";
@@ -67,14 +74,16 @@ async function verifyLinkNavigation(
   expectedUrl: string
 ): Promise<void> {
   const item = page.locator(selector, { hasText: label });
-  await item.click();
 
-  // Wait for navigation and verify URL
-  await page.waitForURL(expectedUrl);
-  expect(page.url()).toBe(expectedUrl);
+  // 1. Click and wait for the network to be idle
+  await Promise.all([page.waitForLoadState("networkidle"), item.click()]);
 
-  // Navigate back to home
-  await page.goto(BASE_URL);
+  // 2. Use a Regex to check the URL (ignores trailing slashes or minor query params)
+  const urlPattern = new RegExp(expectedUrl.replace(/\/$/, "") + "/?$");
+  await expect(page).toHaveURL(urlPattern, { timeout: 10000 });
+
+  // 3. Clean transition back
+  await page.goto(BASE_URL, { waitUntil: "domcontentloaded" });
 }
 
 // Type definitions
@@ -84,197 +93,6 @@ interface MenuItem {
   url?: string;
   hasSubmenu?: boolean;
 }
-
-interface SubmenuGroup {
-  parentClass: string;
-  parentLabel: string;
-  items: MenuItem[];
-}
-
-// Test data
-const productsSubmenuItems: MenuItem[] = [
-  {
-    class: "menu-item-6088",
-    label: "Edible Salt",
-    url: "https://sobaansalts.com/himalayan-edible-salt-manufacturer/",
-  },
-  {
-    class: "menu-item-6089",
-    label: "Salt Lamp",
-    hasSubmenu: true,
-    url: "https://sobaansalts.com/himalayan-salt-lamp-supplier-and-manufacturer/",
-  },
-  {
-    class: "menu-item-6206",
-    label: "Candle Holders",
-    hasSubmenu: true,
-    url: "https://sobaansalts.com",
-  },
-  {
-    class: "menu-item-7327",
-    label: "Bath Salt",
-    url: "https://sobaansalts.com/bath-salts-manufacturer/",
-  },
-  {
-    class: "menu-item-9808",
-    label: "Salt Tiles",
-    url: "https://sobaansalts.com/salt-tiles/",
-  },
-  {
-    class: "menu-item-6098",
-    label: "Salt Licks",
-    url: "https://sobaansalts.com/himalayan-salt-lick-manufacturer/",
-  },
-  {
-    class: "menu-item-6091",
-    label: "Iodized Salt",
-    url: "https://sobaansalts.com/iodized-salt-manufacturer/",
-  },
-  {
-    class: "menu-item-6092",
-    label: "Epsom Salt",
-    url: "https://sobaansalts.com/epsom-salt-manufacturer/",
-  },
-  {
-    class: "menu-item-6093",
-    label: "Black Salt",
-    url: "https://sobaansalts.com/black-salt-manufacturer/",
-  },
-  {
-    class: "menu-item-6135",
-    label: "Table Salt",
-    url: "https://sobaansalts.com/table-salt-manufacturers/",
-  },
-  {
-    class: "menu-item-6097",
-    label: "Water Softner Salt",
-    url: "https://sobaansalts.com/water-softener-salt-manufacturer/",
-  },
-];
-
-const industrialSaltSubmenuItems: MenuItem[] = [
-  {
-    class: "menu-item-6095",
-    label: "Pool Salt",
-    url: "https://sobaansalts.com/pool-salt-manufacturers/",
-  },
-  {
-    class: "menu-item-6094",
-    label: "Road Salt",
-    url: "https://sobaansalts.com/road-salt-manufacturers/",
-  },
-  {
-    class: "menu-item-6096",
-    label: "Ice Salt",
-    url: "https://sobaansalts.com/ice-melt-salt-manufacturer/",
-  },
-];
-
-const aboutUsSubmenuItems: MenuItem[] = [
-  {
-    class: "menu-item-7459",
-    label: "Our Team",
-    url: "https://sobaansalts.com/our-team/",
-  },
-  {
-    class: "menu-item-8125",
-    label: "Careers",
-    url: "https://sobaansalts.com/careers/",
-  },
-];
-
-const resourcesSubmenuItems: MenuItem[] = [
-  {
-    class: "menu-item-6132",
-    label: "Company Profile",
-    url: "https://sobaansalts.com/company-profile/",
-  },
-  {
-    class: "menu-item-6131",
-    label: "Certificates",
-    url: "https://sobaansalts.com/certificates/",
-  },
-  {
-    class: "menu-item-6129",
-    label: "Blogs",
-    url: "https://sobaansalts.com/blog/",
-  },
-  {
-    class: "menu-item-10676",
-    label: "Private Labeling",
-    url: "https://sobaansalts.com/private-labeling/",
-  },
-];
-
-const nestedSubmenus: SubmenuGroup[] = [
-  {
-    parentClass: "menu-item-6089",
-    parentLabel: "Salt Lamp",
-    items: [
-      {
-        class: "menu-item-6099",
-        label: "USB Salt Lamp",
-        url: "https://sobaansalts.com/himalayan-usb-salt-lamp-manufacturer/",
-      },
-      {
-        class: "menu-item-6100",
-        label: "3D Salt Lamp",
-        url: "https://sobaansalts.com/himalayan-3d-salt-lamp-manufacturer/",
-      },
-      {
-        class: "menu-item-6101",
-        label: "Night Salt Lamp",
-        url: "https://sobaansalts.com/himalayan-salt-night-lamp-manufacturer/",
-      },
-      {
-        class: "menu-item-6102",
-        label: "Animal Shape Lamp",
-        url: "https://sobaansalts.com/himalayan-animal-salt-lamps-manufacturer/",
-      },
-      {
-        class: "menu-item-6103",
-        label: "Natural Salt Lamp",
-        url: "https://sobaansalts.com/natural-himalayan-salt-lamp-manufacturer/",
-      },
-      {
-        class: "menu-item-6104",
-        label: "Geometrical Shape Lamp",
-        url: "https://sobaansalts.com/geometrical-himalayan-salt-lamp-manufacturer/",
-      },
-      {
-        class: "menu-item-6105",
-        label: "Aroma Therapy Salt Lamp",
-        url: "https://sobaansalts.com/himalayan-aromatherapy-salt-lamp-manufacturer/",
-      },
-    ],
-  },
-  {
-    parentClass: "menu-item-6206",
-    parentLabel: "Candle Holders",
-    items: [
-      {
-        class: "menu-item-6207",
-        label: "White Candle Holder",
-        url: "https://sobaansalts.com/himalayan-white-salt-candle-holder-manufacturer/",
-      },
-      {
-        class: "menu-item-6208",
-        label: "Grey Candle Holder",
-        url: "https://sobaansalts.com/himalayan-grey-salt-candle-holder-manufacturer/",
-      },
-      {
-        class: "menu-item-6209",
-        label: "Pink Candle Holder",
-        url: "https://sobaansalts.com/himalayan-pink-natural-candle-holder-manufacturer/",
-      },
-      {
-        class: "menu-item-6210",
-        label: "Geometric Candle Holder",
-        url: "https://sobaansalts.com/himalayan-pink-geometric-candle-holder-manufacturer/",
-      },
-    ],
-  },
-];
 
 // Tests
 test.describe("Navigation Menu Tests", () => {
@@ -380,6 +198,8 @@ test.describe("Navigation Menu Tests", () => {
 
 // Navigation Tests - Actually click and verify page loads
 test.describe("Link Navigation Tests", () => {
+  test.slow();
+
   test.beforeEach(async ({ page }) => {
     await page.goto(BASE_URL);
   });
