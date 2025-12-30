@@ -213,7 +213,7 @@ test.describe("Link Navigation Tests", () => {
     );
 
     for (const item of itemsToTest) {
-      await page.goto(BASE_URL);
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
       await openDropdown(page, "Products");
       await verifyLinkNavigation(
         page,
@@ -264,28 +264,55 @@ test.describe("Link Navigation Tests", () => {
     }
   });
 
-  test("Verify nested submenu links navigate correctly", async ({ page }) => {
+  test("Verify Product Salt Lamp nested submenu links navigate correctly", async ({
+    page,
+  }) => {
     await openDropdown(page, "Products");
+    const submenu = nestedSubmenus[0];
 
-    for (const submenu of nestedSubmenus) {
-      for (const item of submenu.items) {
-        await page.goto(BASE_URL);
-        await openDropdown(page, "Products");
+    for (const item of submenu.items) {
+      await page.goto(BASE_URL);
+      await openDropdown(page, "Products");
 
-        const parentItem = page.locator(
-          NavSelectors.subMenuItem(submenu.parentClass),
-          { hasText: submenu.parentLabel }
-        );
-        await parentItem.click();
-        await page.waitForTimeout(DROPDOWN_ANIMATION_DELAY);
+      const parentItem = page.locator(
+        NavSelectors.subMenuItem(submenu.parentClass),
+        { hasText: submenu.parentLabel }
+      );
+      await parentItem.click();
+      await page.waitForTimeout(DROPDOWN_ANIMATION_DELAY);
 
-        await verifyLinkNavigation(
-          page,
-          NavSelectors.nestedSubMenuItem(submenu.parentClass, item.class),
-          item.label,
-          item.url!
-        );
-      }
+      await verifyLinkNavigation(
+        page,
+        NavSelectors.nestedSubMenuItem(submenu.parentClass, item.class),
+        item.label,
+        item.url!
+      );
+    }
+  });
+
+  test("Verify Product Candle Holders nested submenu links navigate correctly", async ({
+    page,
+  }) => {
+    await openDropdown(page, "Products");
+    const submenu = nestedSubmenus[1];
+
+    for (const item of submenu.items) {
+      await page.goto(BASE_URL);
+      await openDropdown(page, "Products");
+
+      const parentItem = page.locator(
+        NavSelectors.subMenuItem(submenu.parentClass),
+        { hasText: submenu.parentLabel }
+      );
+      await parentItem.click();
+      await page.waitForTimeout(DROPDOWN_ANIMATION_DELAY);
+
+      await verifyLinkNavigation(
+        page,
+        NavSelectors.nestedSubMenuItem(submenu.parentClass, item.class),
+        item.label,
+        item.url!
+      );
     }
   });
 });
